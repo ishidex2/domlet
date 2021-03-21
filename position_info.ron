@@ -1,0 +1,32 @@
+{
+    "card_frame": PositionInfo(
+        texture_rect: TexRect(0, 0, 63, 96),
+    ),
+    "card_back": PositionInfo(
+        texture_rect: TexRect(0, 96, 63, 96),
+    ),
+    "ice": PositionInfo(
+        texture_rect: TexRect(96, 32, 32, 32),
+    ),
+    "inverse": PositionInfo(
+        texture_rect: TexRect(96, 0, 32, 32),
+    ),
+    "move_forward": PositionInfo(
+        texture_rect: TexRect(64, 0, 32, 32),
+    ),
+    "rotate_right": PositionInfo(
+        texture_rect: TexRect(64, 32, 32, 32),
+    ),
+    "degree_1": PositionInfo(
+        texture_rect: TexRect(128, 0, 32, 32),
+    ),
+    "degree_2": PositionInfo(
+        texture_rect: TexRect(160, 0, 32, 32),
+    ),
+    "degree_3": PositionInfo(
+        texture_rect: TexRect(192, 0, 32, 32),
+    ),
+    "degree_4": PositionInfo(
+        texture_rect: TexRect(224, 0, 32, 32),
+    ),
+}

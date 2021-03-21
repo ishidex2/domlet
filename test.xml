@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Div style="padding: 40; background-color: white;">
+    <Div style="margin: 0 10; padding: 10; background-color: black; color:white;">
+        Editor
+    </Div>
+    <Div style="color: white;">
+        <Span style="background-color: blue; padding: 10;">Code</Span>
+        <Span style="background-color: lightblue; padding: 10;">Textures</Span>
+    </Div>
+    <Div style="border: 3 blue; padding: 20;">
+        <Span style="color: red;">int</Span> main() {
+        <Div></Div>
+        <Span>
+            <Raw>    </Raw>printf(<Span style="color: green;">"Hello, world!"</Span>);
+        </Span> 
+        <Div></Div>
+        }
+    </Div>
+
+    <Div style="color: white; margin: 0 10;">
+        <Span style="background-color: lightblue; padding: 10;">Run</Span>
+        <Span style="color: red; padding: 10; margin: 10 0 0 0;">Close</Span>
+    </Div>
+
+    <Div style="stretch: no; border: 2 yellow; color: yellow; background: black; padding: 10;"> 
+        Tip: press R to reload
+    </Div>
+</Div>
