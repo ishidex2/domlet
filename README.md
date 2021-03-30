@@ -1,9 +1,9 @@
-### Domlet
+## Domlet
 
 Dom-like system
 
 
-#### Installation
+### Installation
 
 To install, you need rust toolchain, for more information refer to https://rustup.rs/
 
@@ -27,7 +27,7 @@ To fix that copy following files **into the same directory you run the executabl
 
 After that you should be able to run the project if afromentioned files are valid (note that for ./style.css and ./test.xml will not crash but inform you, you can still reload these using button "R" while the program is running, which will result in an immediate change, informing another error or showing the desired result.
 
-#### Usage
+### Usage
 
 This project is mostly in a prototype stage, however interaction still exists.
 
