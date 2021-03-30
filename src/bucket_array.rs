@@ -1,5 +1,6 @@
 use std::collections::btree_set::*;
 type Id = usize;
+
 #[derive(Debug)]
 pub struct BucketArray<T>
 {
@@ -192,8 +193,7 @@ fn test()
         assert_eq!(it.next(), None);
     }
     dbg!(&b);
-    for (k, v) in b.iter_mut()
-    {
+    for (_k, v) in b.iter_mut() {
         *v = 123;
     }
     b.insert(3);

@@ -43,8 +43,8 @@ impl UiElem {
         let padding = self.get_style(StyleRuleTag::Padding).rule;
         let margin = self.get_style(StyleRuleTag::Margin).rule;
         let border = self.get_style(StyleRuleTag::Border).rule;
-        ComputedStyle { padding: extract!(padding, StyleRule::Offset{l, t, r, b} => Vec2f::new(l, t)),
-                        margin:  extract!(margin, StyleRule::Offset{l, t, r, b} => Vec2f::new(l, t))
+        ComputedStyle { padding: extract!(padding, StyleRule::Offset{l, t, r: _, b: _} => Vec2f::new(l, t)),
+                        margin:  extract!(margin, StyleRule::Offset{l, t, r: _, b: _} => Vec2f::new(l, t))
                                 +extract!(border, StyleRule::Outline{ size, .. } => Vec2f::new(size, size)) }
     }
 
@@ -202,7 +202,7 @@ impl Item {
     }
 
     fn into_elem(mut self, things: &mut BucketArray<UiElem>, parent: Option<UiId>) -> UiId {
-        let mut o = UiElem { elem: self.elem, styles: self.styles, children: vec![], parent: parent};
+        let o = UiElem { elem: self.elem, styles: self.styles, children: vec![], parent: parent};
         let mut children: Vec<_> = self.children.drain(..).map(|e| e.into_elem(things, None)).collect();
         let pid = things.insert(o);
         for child in children.iter() {

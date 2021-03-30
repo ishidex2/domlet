@@ -1,0 +1,18 @@
+{
+  "configurations": {
+    "Launch": {
+      "adapter": "vscode-cpptools",
+      "configuration": {
+        "request": "launch",
+        "program": "./target/debug/xogue",
+        "args": [],
+        "cwd": ".",
+        "environment": [],
+        "externalConsole": true,
+        "MIMode": "lldb",
+        "MIDebuggerPath": "/usr/bin/lldb"
+      }
+    }
+  }
+}
+

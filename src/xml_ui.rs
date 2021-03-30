@@ -1,189 +1,106 @@
 
-use std::fs::File;
+/// THIS DOCUMENT IS A STUB!!
+
+use std::{collections::HashMap, fs::File};
 use std::io::BufReader;
-
+use crate::{atoms::Id, css_parser::Css, dom_repr::DomComponent};
+use crate::dom_repr::DomSystem;
 use xml::reader::{EventReader, XmlEvent};
-use crate::ui::*;
+use crate::{css_matcher::match_selector_against_dom, ui::*};
+use crate::css_gen::generate_from;
 
-pub fn trim_bs(s: String) -> String
-{
-    s.replace("\n", "").split(' ').filter(|&e| e != "").collect::<Vec<&str>>().join(" ")
-}
 
-pub fn parse_color(s: &str) -> (u8, u8, u8, u8) {
-    match s {
-        "red" => (255, 0, 0, 255),
-        "green" => (0, 255, 0, 255),
-        "blue" => (0, 0, 255, 255),
-        "lightblue" => (128, 128, 255, 255),
-        "white" => (255, 255, 255, 255),
-        "black" => (0, 0, 0, 255),
-        "yellow" => (255, 255, 0, 255),
-        _ => (0, 0, 0, 0)
-    }
-}
 
-pub fn parse_css(src: &str) -> Option<Vec<(StyleRuleTag, StyleRule)>> {
-    let stmts = src.split(";");
-    let mut res = vec![];
-    for statement in stmts {
-        if trim_bs(statement.to_string()) == "" {
-            continue;
-        }
-        let mut s = statement.split(":");
-        let rule = match StyleRuleTag::from(&trim_bs(s.next()?.to_string())) {
-            Some(x) => x,
-            None => continue
-        };
-        let rdata = trim_bs(s.next()?.to_string());
-        let mut data = rdata.split(" ");
-        match rule {
-            StyleRuleTag::Padding | StyleRuleTag::Margin => {
-                let mut dims = vec![];
-                while let Some(num) = data.next() {
-                    dims.push(num.parse::<i32>().ok()? as f32);
-                }
-                let (l, t, r, b) = match dims.len() {
-                    1 => {
-                        (dims[0], dims[0], dims[0], dims[0])
-                    }
-                    2 => {
-                        (dims[0], dims[1], dims[0], dims[1])
-                    }
-                    4 => {
-                        (dims[0], dims[1], dims[2], dims[3])
-                    }
-                    _ => return None
-                };
-                res.push((rule, StyleRule::Offset {l, t, r, b}));
-            },
-            StyleRuleTag::Display => {
-                res.push((rule, StyleRule::Display(match data.next()? {
-                    "block" => DisplayType::Block,
-                    "inline" => DisplayType::Inline,
-                    _ => continue
-                })));
-            },
-            StyleRuleTag::Stretch => {
-                res.push((rule, StyleRule::Stretch(match data.next()? {
-                    "true" | "yes" => StretchType::True,
-                    "false" | "no" => StretchType::False,
-                    _ => continue
-                })));
-            },
-            StyleRuleTag::Border => {
-                res.push((rule, StyleRule::Outline {size: data.next()?.parse::<f32>().ok()?, color: parse_color(data.next()?)}));
-            },
-            StyleRuleTag::Color | StyleRuleTag::BackgroundColor => {
-                res.push((rule, StyleRule::Color {color: parse_color(data.next()?)}));
-            },
-            _ => {}
-        }
-
-    }
-    Some(res)
-}
-
-pub fn parse_xml(path: &str) -> crate::ui::UiSystem {
-    let file = match File::open(path) {
-        Ok(x) => x,
-        Err(e) => return Item::build().padding(10., 10.)
+fn make_error(message: String, path: &str, pathcss: &str) -> UiSystem {
+    return Item::build().padding(10., 10.)
         .style(StyleRuleTag::Color, StyleRule::Color { color: (255, 0, 0, 255) })
         .style(StyleRuleTag::BackgroundColor, StyleRule::Color { color: (255, 255, 255, 255) })
         .with_children(vec![
             Item::build()
-            .padding(10., 10.)
-            .with_children(vec![
-                Item::build().component(Ui::Text { text: "Whoops! An error:".to_string() })
-            ]),
-            Item::build().component(Ui::Text { text: e.to_string() }),
+                .padding(10., 10.)
+                .with_children(vec![
+                    Item::build().component(Ui::Text { text: "Whoops! An error:".to_string() })
+                ]),
+            Item::build().component(Ui::Text { text: message }),
             Item::build(),
             Item::build().component(Ui::Text { text: "-----------------------".to_string() }),
             Item::build(),
-            Item::build().component(Ui::Text { text: format!("parse_xml(\"{}\")", path) })
+            Item::build().component(Ui::Text { text: format!("parse_xml(\"{}\", \"{}\")", path, pathcss) })
         ]).into_ui()
+}
+
+fn build_recursively(system: &DomSystem, root: Id, styles: &HashMap<Id, Vec<usize>>, css: &Css) -> Item {
+    let components = system.firstlevel_components(root).unwrap();
+    let element = system.get_element(root).unwrap();
+    let mut item = match element.tag.as_str() {
+        "Span" => Item::build().style(StyleRuleTag::Display, StyleRule::Display(DisplayType::Inline)),
+        _ => Item::build(),
     };
-    let file = BufReader::new(file);
 
-    let mut raw_depth = 0;
-
-    let parser = EventReader::new(file);
-
-    let mut stack = vec![Item::build()];
-
-    for e in parser {
-        match e {
-            Ok(XmlEvent::StartElement { name, attributes, ..}) => {
-                let mut it = Item::build();
-                it = match (name.to_string()).as_str() {
-                    "Div" => it.component(Ui::Div),
-                    "Button" => it.component(Ui::Button),
-                    "Span" => it.component(Ui::Div).style(StyleRuleTag::Display, StyleRule::Display(DisplayType::Inline)),
-                    "Raw" => {raw_depth += 1; it.style(StyleRuleTag::Display, StyleRule::Display(DisplayType::Inline))}
-                    _ => it.component(Ui::Div)
-                };
-                for i in attributes {
-                    if &(i.name.to_string()) == "style" {
-                        let styles = match parse_css(&i.value) { Some(t) => t, None => continue };
-                        for style in styles.iter() {
-                            it = it.style(style.0, style.1);
-                        }
-                    }
+    let mut children = vec![];
+    let mut is_first = true;
+    for component_id in components {
+        let component = system.get_component(*component_id).unwrap();
+        if let Some(style_list) = styles.get(&root) {
+            for block_id in style_list {
+                let block = &css.blocks[*block_id];
+                let mut genertated = generate_from(&block.rules);
+                for style in genertated.drain(..) {
+                    item = item.style(style.0, style.1);
                 }
-                stack.push(it);
-                let sl = stack.len()-1;
+            }
+        }
+        match component {
+            DomComponent::Element(el) => {
+                children.push(build_recursively(system, *component_id, styles, css));
             },
-            Ok(XmlEvent::Whitespace(s)) => {
-                if raw_depth > 0 {
-                    let le = stack.len()-1;
-                    stack.get_mut(le).unwrap().children.push(Item::build().component(Ui::Text { text: s }));   
-                }
+            DomComponent::Text(t) => {
+                let prepend = if t.text.chars().next() == Some(' ') && !is_first { " " } else { "" };
+                let append = if t.text.chars().last() == Some(' ') { " " } else { "" };
+
+                let target = format!("{}{}{}", prepend, crate::util::remove_trailing_spaces(t.text.as_str()), append);
+                children.push(Item::build().component(Ui::Text { text: target }));
             }
-            Ok(XmlEvent::Characters(s)) => {
-                let string = if raw_depth > 0 {
-                    s
-                }
-                else {
-                    let mut prep = "";
-                    let mut app = "";
-                    if s.chars().next().unwrap_or('.') == ' ' {
-                        prep = " ";
-                    }
-                    if s.chars().last().unwrap_or('.') == ' ' {
-                        app = " ";
-                    }
-                    String::from(prep)+&trim_bs(s)+app
-                };
-                let le = stack.len()-1;
-                stack.get_mut(le).unwrap().children.push(Item::build().component(Ui::Text { text: string }));
-            },
-            Ok(XmlEvent::EndElement { name }) => {
-                if name.to_string() == "Raw" {
-                    raw_depth -= 1;
-                }
-                let it = stack.pop().unwrap();
-                let le = stack.len()-1;
-                stack.get_mut(le).unwrap().children.push(it);
+        }
+        is_first = false;
+    }
+
+    item = item.with_children(children);
+    item
+}
+
+pub fn parse_xml(path: &str) -> crate::ui::UiSystem {
+    let style_file = std::fs::read_to_string("./style.css").unwrap();
+    let mut stylesheet = match crate::css_parser::CssParser::new(style_file.as_str()).parse() {
+        Ok(x) => x,
+        Err(e) => return make_error(format!("{:?}", e), path, "./style.css")
+    };
+
+    let file = match std::fs::read_to_string(path) {
+        Ok(x) => x,
+        Err(e) => return make_error(e.to_string(), path, "./style.css")
+    };
+
+    // Create a DOM system
+    let mut system = match DomSystem::from_xml(&file) {
+        Ok(x) => x,
+        Err(e) => return make_error(e.to_string(), path, "./style.css")
+    };
+
+    let mut styles_for_elements: HashMap<Id, Vec<usize>> = HashMap::new();
+
+    for (index, block) in stylesheet.blocks.iter().enumerate() {
+        let matching = match_selector_against_dom(&block.selector, &system);
+        for i in matching {
+            if styles_for_elements.contains_key(&i) {
+                styles_for_elements.get_mut(&i).unwrap().push(index)
             }
-            Err(e) => {
-                return Item::build().padding(10., 10.)
-                .style(StyleRuleTag::Color, StyleRule::Color { color: (255, 0, 0, 255) })
-                .style(StyleRuleTag::BackgroundColor, StyleRule::Color { color: (255, 255, 255, 255) })
-                .with_children(vec![
-                    Item::build()
-                    .padding(10., 10.)
-                    .with_children(vec![
-                        Item::build().component(Ui::Text { text: "Whoops! An error:".to_string() })
-                    ]),
-                    Item::build().component(Ui::Text { text: e.to_string() }),
-                    Item::build(),
-                    Item::build().component(Ui::Text { text: "-----------------------".to_string() }),
-                    Item::build(),
-                    Item::build().component(Ui::Text { text: format!("parse_xml(\"{}\")", path) })
-                ]).into_ui();
+            else {
+                styles_for_elements.insert(i, vec![index]);
             }
-            _ => {}
         }
     }
-    return stack.pop().unwrap().into_ui();
+
+    let items = build_recursively(&system, system.root(), &styles_for_elements, &stylesheet);
+    items.into_ui()
 }

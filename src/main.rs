@@ -1,12 +1,19 @@
+#![deny(unused_must_use)]
+#![allow(dead_code)]
 mod atoms;
 mod bucket_array;
+mod util;
 mod ui;
+mod dom_repr;
 mod xml_ui;
+mod css_parser;
+mod css_gen;
+mod css_matcher;
 extern crate sdl2;
 extern crate ron;
 extern crate xml;
 use crate::atoms::*;
-use crate::bucket_array::*;
+
 
 use serde::{Deserialize, Serialize};
 use sdl2::gfx::primitives::DrawRenderer;
@@ -78,6 +85,7 @@ pub fn render_text(canv: &mut sdl2::render::WindowCanvas, tex: &mut sdl2::render
             continue;
         }
         let i = if (chr as u8) >= 32 && (chr as u8) < 128 {chr as u32 - 31} else { 0 };
+        tex.set_alpha_mod(dat.color.3);
         tex.set_color_mod(dat.color.0, dat.color.1, dat.color.2);
         let sox = (i*8)%512;
         let soy = ((i*8)/512)*16;
@@ -117,7 +125,7 @@ pub fn main() {
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
 
-    let window = video_subsystem.window("rust-sdl2 demo", config.window_size.0*2, config.window_size.1*2)
+    let window = video_subsystem.window("xmlcss engine testing_1", config.window_size.0*2, config.window_size.1*2)
         .position_centered()
         .resizable()
         .build()
@@ -140,7 +148,7 @@ pub fn main() {
     let mut frames = ui.calculate_layout();
     frames.reverse();
 
-    let mut i = 0;
+    let i = 0;
     'running: loop {
         let si = (f32::sin((i as f32)/255.*std::f32::consts::TAU)*128.0+128.) as u8;
         canvas.set_draw_color(Color::RGB(si/16, 0, 255/16 - si/16));
@@ -148,12 +156,12 @@ pub fn main() {
         let wsize = canvas.window().size();
         let out = format!("Hello {}, {} logins", save_data.name, save_data.login_count);
 
-        canvas.string((wsize.0-(&out.len()*8) as u32) as i16, wsize.1 as i16-8, &out, Color::BLACK);
-        canvas.string((wsize.0-(&out.len()*8) as u32-1) as i16, wsize.1 as i16-9, &out, Color::WHITE);
+        canvas.string((wsize.0-(&out.len()*8) as u32) as i16, wsize.1 as i16-8, &out, Color::BLACK).unwrap();
+        canvas.string((wsize.0-(&out.len()*8) as u32-1) as i16, wsize.1 as i16-9, &out, Color::WHITE).unwrap();
 
         if let Some(text) = &err {
-            canvas.string(0, wsize.1 as i16-8, &text, Color::BLACK);
-            canvas.string(-1, wsize.1 as i16-9, &text, Color::WHITE);
+            canvas.string(0, wsize.1 as i16-8, &text, Color::BLACK).unwrap();
+            canvas.string(-1, wsize.1 as i16-9, &text, Color::WHITE).unwrap();
         }
 
 
@@ -183,10 +191,11 @@ pub fn main() {
             canvas.set_draw_color(Color::RGBA(border.1.0, border.1.1, border.1.2, border.1.3));
             //canvas.fill_rect(sdl2::rect::Rect::new(i.rect.pos.x as i32-border.0 as i32, i.rect.pos.y as i32-border.0 as i32, i.rect.size.x as u32+(border.0*2.) as u32, i.rect.size.y as u32+(border.0*2.) as u32));
             let offs = (wsize.0 as i32/2-frames[0].rect.size.x as i32/2, wsize.1 as i32/2-frames[0].rect.size.y as i32/2);
-            canvas.fill_rect(sdl2::rect::Rect::new(offs.0+i.rect.pos.x as i32-border.0 as i32, offs.1+i.rect.pos.y as i32-border.0 as i32, i.rect.size.x as u32+(border.0*1.) as u32, border.0 as u32));
-            canvas.fill_rect(sdl2::rect::Rect::new(offs.0+i.rect.pos.x as i32-border.0 as i32, offs.1+i.rect.pos.y as i32, border.0 as u32, i.rect.size.y as u32+(border.0*1.) as u32));
-            canvas.fill_rect(sdl2::rect::Rect::new(offs.0+i.rect.pos.x as i32 as i32, offs.1+i.rect.pos.y as i32+i.rect.size.y as i32, i.rect.size.x as u32+(border.0*1.) as u32, border.0 as u32));
-            canvas.fill_rect(sdl2::rect::Rect::new(offs.0+i.rect.pos.x as i32+i.rect.size.x as i32, offs.1+i.rect.pos.y as i32-border.0 as i32, border.0 as u32, i.rect.size.y as u32+(border.0*1.) as u32));
+            canvas.fill_rect(sdl2::rect::Rect::new(offs.0+i.rect.pos.x as i32-border.0 as i32, offs.1+i.rect.pos.y as i32-border.0 as i32, i.rect.size.x as u32+(border.0*1.) as u32, border.0 as u32)).unwrap();
+            canvas.fill_rect(sdl2::rect::Rect::new(offs.0+i.rect.pos.x as i32-border.0 as i32, offs.1+i.rect.pos.y as i32, border.0 as u32, i.rect.size.y as u32+(border.0*1.) as u32)).unwrap();
+            canvas.fill_rect(sdl2::rect::Rect::new(offs.0+i.rect.pos.x as i32 as i32, offs.1+i.rect.pos.y as i32+i.rect.size.y as i32, i.rect.size.x as u32+(border.0*1.) as u32, border.0 as u32)).unwrap();
+            canvas.fill_rect(sdl2::rect::Rect::new(offs.0+i.rect.pos.x as i32+i.rect.size.x as i32, offs.1+i.rect.pos.y as i32-border.0 as i32, border.0 as u32, i.rect.size.y as u32+(border.0*1.) as u32)).unwrap();
+
             match &elem.elem {
                 ui::Ui::Text { text } => {
                     let color = elem.get_fg();
@@ -194,19 +203,17 @@ pub fn main() {
                 },
                 ui::Ui::Button => {
                     canvas.set_draw_color(Color::RED);
-                    canvas.fill_rect(sdl2::rect::Rect::new(i.rect.pos.x as i32+offs.0, offs.1+i.rect.pos.y as i32, i.rect.size.x as u32, i.rect.size.y as u32));
+                    canvas.fill_rect(sdl2::rect::Rect::new(i.rect.pos.x as i32+offs.0, offs.1+i.rect.pos.y as i32, i.rect.size.x as u32, i.rect.size.y as u32)).unwrap();
                 },
                 ui::Ui::Div => {
                     let color = elem.get_bg();
                     canvas.set_draw_color(Color::RGBA(color.0, color.1, color.2, color.3));
-                    canvas.fill_rect(sdl2::rect::Rect::new(i.rect.pos.x as i32+offs.0, offs.1+i.rect.pos.y as i32, i.rect.size.x as u32, i.rect.size.y as u32));
+                    canvas.fill_rect(sdl2::rect::Rect::new(i.rect.pos.x as i32+offs.0, offs.1+i.rect.pos.y as i32, i.rect.size.x as u32, i.rect.size.y as u32)).unwrap();
                 },
-                _ => {}
+                //_ => {}
             }
         };
-
         // The rest of the game loop goes here...
-
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
