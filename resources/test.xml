@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Div id="main">
+    <Div class="menu-el">File</Div>
+    <Div class="menu-el">Edit</Div>
+    <Div class="menu-el">Selection</Div>
+    <Div class="menu-el">View</Div>
+    <Div class="button primary">Run</Div>
+    <Div class="menu-el button">Compile</Div>
+    <Div class="breadcrumb">./src/main.c</Div>
+    <Div id="app">
+        <Div id="side">
+            .
+            <Div class="dir">
+            src/
+                <Div class="dir file">
+                    main.c
+                </Div>
+            </Div>
+            <Div class="dir">
+            bin/
+                <Div class="dir">
+                    linux-x86/
+                    <Div class="dir file ignore">
+                        a.out
+                    </Div>
+                </Div>
+            </Div>
+            <Div class="dir file">
+                makefilesrtrstrstriastnrist
+            </Div>
+        </Div>
+        <Div id="code">
+            <Div id="line-no">1 <Div></Div>
+                2 <Div></Div>
+                3 <Div></Div>
+                4 <Div></Div>
+                5 <Div></Div>
+                6 <Div></Div>
+                7 <Div></Div>
+                8 <Div></Div>
+                9 <Div></Div>
+            </Div>
+            <Div id="text">
+                <Span class="macro">#include &lt;stdio.h&gt;</Span>
+                <Div class="newline"></Div>
+                <Span class="kw">int</Span> main() {
+                <Div></Div>
+                <Span class="tab">....</Span>printf(<Span class="string">"Hello, world!"</Span>);
+                <Div></Div>
+                }
+            </Div>
+        </Div>
+    </Div>
+    <Div class="important">
+            Tip: <Span id="querytext">Press R to reload changes done to ./style.css or ./test.xml</Span>
+    </Div>
+</Div>

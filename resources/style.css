@@ -1,0 +1,95 @@
+#main {
+    padding: 10px;
+    border: 2px red;
+    background: white;
+    color: #000f;
+}
+.dir {
+    stretch: no;
+}
+
+.dir {
+    padding: 20px 0px 0px 0px;
+}
+
+.button {
+    border: 1px #22b855;
+}
+
+.menu-el, .button {
+    margin: 4px;
+    display: inline;
+    padding: 10px 4px;
+}
+
+.button.primary {
+    background: #22b855;
+}
+
+
+.dir.file {
+    color: #22b855;
+}
+
+.dir.file.ignore {
+    color: #444;
+}
+
+#side, #code {
+    display: inline;
+}
+
+#app {
+    margin: 0px 10px;
+}
+
+#line-no, .breadcrumb {
+    color: #333;
+    border: 1px #ccc;
+    padding: 10px 0px;
+}
+
+#line-no {
+    display: inline;
+}
+
+.breadcrumb {
+    margin: 0px 4px;
+    padding: 4px;
+}
+
+#text {
+    padding: 10px 0px;
+    display: inline;
+}
+
+
+.string {
+    color: #22b855;
+}
+
+.macro {
+    color: #22b855;
+}
+
+.newline {
+    padding: 0px 8px;
+}
+
+.tab {
+    color: #ccc;
+}
+
+.kw {
+    color: red;
+}
+
+.important {
+    background: red;
+    padding: 20px;
+    color: white;
+}
+
+#querytext {
+    color: yellow;
+}

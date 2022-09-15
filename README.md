@@ -1,7 +1,9 @@
 ## Domlet
 
-Dom-like system
+Dom-like system.
 
+Here's the generated output from `test.xml` and `style.css`:
+![Image showing something that looks like an IDE](example.png)
 
 ### Installation
 
@@ -48,7 +50,7 @@ And expect it to match all elements with class `file` within id `main`, instead 
 
 This is to be worked on
 
-Another difference is rule "stretch", it defines on wether the elements with `display: block` will be stretched or not. Default value for block elements is `yes/true`
+Another difference is rule "stretch", it defines on whether the elements with `display: block` will be stretched or not. Default value for block elements is `yes/true`
 
 > **Note**: Inline styles are currently disabled!
 
