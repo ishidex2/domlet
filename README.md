@@ -2,6 +2,8 @@
 
 Dom-like system
 
+Here's the generated output from `test.xml` and `style.css`:
+![Image showing something that looks like an IDE](example.png)
 
 ### Installation
 
